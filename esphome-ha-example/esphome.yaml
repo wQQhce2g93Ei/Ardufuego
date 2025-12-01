@@ -7,6 +7,9 @@ esphome:
   platform: ESP8266
   board: nodemcuv2
   includes:
+  # I just pulled this header from the EspFuego library source code
+  # I don't recall if I manually compiled this with PlatformIO or
+  # how this gets built.
   - include/Espfuego.h
 
 wifi:
@@ -49,12 +52,15 @@ switch:
 - platform: restart
   name: "${devicename} Restart"
 
+# The EspFuegoComponent natively uses MQTT for controlling
+# the fireplace and sending status updates
 mqtt:
   broker: !secret mqtt_broker_host
   username: !secret mqtt_username
   password: !secret mqtt_password
   reboot_timeout: 5min
 
+# All the magic is in this custom_component
 custom_component:
 - lambda: |-
     auto espfuego = new EspfuegoComponent();

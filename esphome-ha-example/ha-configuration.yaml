@@ -1,0 +1,97 @@
+# Add mqtt switches for fireplace power and light
+mqtt:
+  switch:
+  - name: Fireplace
+    command_topic: "fireplace/power/cmnd"
+    state_topic: "fireplace/power/stat"
+  - name: Fireplace Light
+    command_topic: "fireplace/light/cmnd"
+    state_topic: "fireplace/light/stat"
+
+# Add input_numbers to keep track of fireplace flame height and fan speed
+input_number:
+  fireplace_flame_height_slider:
+    name: Fireplace Flame Height
+    initial: 1
+    min: 1
+    max: 5
+    step: 1
+  fireplace_fan_speed_slider:
+    name: Fireplace Fan Speed
+    initial: 0
+    min: 0
+    max: 3
+    step: 1
+
+# Add a climate entity
+climate:
+- platform: generic_thermostat
+  name: Basement
+  heater: switch.fireplace
+  target_sensor: sensor.basement_temperature
+  precision: .1
+  target_temp: 74
+  min_cycle_duration:
+    minutes: 3
+
+automation:
+- id: fireplace_flame_height_update
+  alias: Fireplace Flame Height Update
+  trigger:
+    platform: state
+    entity_id: input_number.fireplace_flame_height_slider
+  action:
+    service: mqtt.publish
+    data_template:
+      topic: fireplace/flame/cmnd
+      payload: '{{ trigger.to_state.state | int }}'
+- id: fireplace_fan_speed_update
+  alias: Fireplace Fan Speed Update
+  trigger:
+    platform: state
+    entity_id: input_number.fireplace_fan_speed_slider
+  action:
+    service: mqtt.publish
+    data_template:
+      topic: fireplace/fan/cmnd
+      payload: '{{ trigger.to_state.state | int }}'
+- id: '1607442893909'
+  alias: Enable Thermostat
+  description: ''
+  trigger:
+  - platform: mqtt
+    topic: fireplace/thermostat/cmnd
+    payload: 'True'
+  condition: []
+  action:
+  - service: climate.turn_on
+    data: {}
+    entity_id: climate.basement
+  mode: single
+- id: '1607442963294'
+  alias: Disable Thermostat
+  description: ''
+  trigger:
+  - platform: mqtt
+    topic: fireplace/thermostat/cmnd
+    payload: 'False'
+  condition: []
+  action:
+  - service: climate.turn_off
+    data: {}
+    entity_id: climate.basement
+  mode: single
+- id: '1607443123958'
+  alias: Set Thermostat Temperature
+  description: ''
+  trigger:
+  - platform: mqtt
+    topic: fireplace/desired_temp/stat
+  condition: []
+  action:
+  - service: climate.set_temperature
+    data:
+      temperature: '{{ trigger.payload }}'
+      hvac_mode: heat
+    entity_id: climate.basement
+  mode: single

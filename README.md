@@ -138,7 +138,7 @@ The following files are significant to this project:
 ```
 FireplaceRF fireplace(x);
 ```
-Creates a FireplaceRF to transmit on pin x where x is an int that cooresponds to an interrupt pin.
+Creates a FireplaceRF to transmit on pin x where x is an int that corresponds to an interrupt pin.
 ```
 fireplace.on();
 ```

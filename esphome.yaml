@@ -1,0 +1,71 @@
+substitutions:
+  deviceid: espfuego
+  devicename: ESP Fuego
+
+esphome:
+  name: ${deviceid}
+  platform: ESP8266
+  board: nodemcuv2
+  includes:
+  - include/Espfuego.h
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: .lan
+  ap:
+    ssid: ${deviceid}
+    password: !secret ota_password
+
+api:
+
+captive_portal:
+
+logger:
+
+ota:
+- platform: esphome
+  password: !secret ota_password
+
+sensor:
+- platform: wifi_signal
+  name: ${devicename} WiFi Signal
+  update_interval: 60s
+- platform: uptime
+  name: ${devicename} Uptime
+  filters:
+  - lambda: return x / 60.0;
+  unit_of_measurement: min
+
+binary_sensor:
+- platform: status
+  name: ${devicename} Status
+
+text_sensor:
+- platform: version
+  name: ${devicename} ESPHome Version
+
+switch:
+- platform: restart
+  name: "${devicename} Restart"
+
+mqtt:
+  broker: !secret mqtt_broker_host
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  reboot_timeout: 5min
+
+custom_component:
+- lambda: |-
+    auto espfuego = new EspfuegoComponent();
+    return { espfuego };
+
+binary_sensor:
+- platform: gpio
+  name: PIR Sensor
+  pin:
+    number: D0
+    mode: INPUT_PULLDOWN_16
+  filters:
+  - delayed_off: 10s
+  device_class: motion
